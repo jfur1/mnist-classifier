@@ -7,7 +7,6 @@ import sys
 import os
 from fastapi.middleware.cors import CORSMiddleware
 
-
 # Get absolute path to the project root
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -76,7 +75,7 @@ async def predict_digit(file: UploadFile = File(...)):
         image = ImageOps.invert(image)
 
         # Save debug image after inversion
-        image.save("../data/debug-inverted.png")
+        # image.save("../data/debug-inverted.png")
 
         # Preprocess image for model
         image = transform(image).unsqueeze(0)  # Add batch dimension

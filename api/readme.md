@@ -13,11 +13,25 @@ mnist-classifier/
 ├── api/               # FastAPI application
 │   ├── app.py         # Main API logic
 │   ├── Dockerfile     # Docker build file
-│   ├── requirements.txt  # Dependencies (from root)
+│   ├── requirements.txt  # API Dependencies
 ├── model/             # Model weights directory
 │   ├── mnist_cnn_full.pth
 ├── requirements.txt   # Dependencies for both API and Notebook
 ```
+
+## 🛠️ Running Locally *without* Docker
+### **1️⃣ Install Dependencies**
+Navigate to the `api` directory and install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### **2️⃣ Run the Server**
+```python
+python3 -m api
+```
+
+The API will be available at [localhost:8000](http://localhost:8000)
 
 ## 🛠️ Running Locally with Docker
 ### **1️⃣ Build the Docker Image**
