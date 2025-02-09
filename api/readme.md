@@ -1,50 +1,117 @@
-# MNIST Inference API (FastAPI)
+# MNIST Digit Classifier - API
 
-## Overview
-This FastAPI service provides an **inference API** for our trained **MNIST digit classifier**.  
-Users can **send an image** (28x28 grayscale) to the `/predict/` endpoint, and the API will **return the predicted digit**.
+This is the backend API for the MNIST digit classifier, built with **FastAPI** and deployed using **Docker**. The API accepts an image of a handwritten digit and returns the predicted classification.
 
-## Installation
+## 🚀 Features
+- **FastAPI-based Backend**: Lightweight and efficient.
+- **Dockerized Deployment**: Ensures consistency across environments.
+- **DigitalOcean Deployment**: Runs on a VPS for accessibility.
 
-### 1. Install Dependencies
-```bash
-pip install -r requirements.txt
+## 📂 Project Structure
+```
+mnist-classifier/
+├── api/               # FastAPI application
+│   ├── app.py         # Main API logic
+│   ├── Dockerfile     # Docker build file
+│   ├── requirements.txt  # Dependencies (from root)
+├── model/             # Model weights directory
+│   ├── mnist_cnn_full.pth
+├── requirements.txt   # Dependencies for both API and Notebook
 ```
 
-### 2. Run the Server
-Navigate to the `/api/` directory and run the following command to start the API.
+## 🛠️ Running Locally with Docker
+### **1️⃣ Build the Docker Image**
+Run this from the **root** of the project (`mnist-classifier/`):
 ```bash
-python3 -m api
+cd mnist-classifier
+
+# Build the Docker image
+docker build -t mnist-api -f api/Dockerfile .
 ```
 
-The API will be available at [localhost:8000](http://localhost:8000).
-**API Documentation** will be available at [localhost:8000/docs](http://localhost:8000/docs).
+### **2️⃣ Run the Docker Container**
+```bash
+# Run the API on port 8000
+docker run -p 8000:8000 mnist-api
+```
 
-
-## API Endpoints
-
-### **`POST /predict/`**
-- Request: Upload a 28x28 grayscale image.
-- Response: Returns the predicted digit.
-
-
-#### **Example Request Using `curl`**
-
+### **3️⃣ Test the API**
 ```bash
 curl -X 'POST' 'http://localhost:8000/predict/' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'file=@../data/sample.png'
+     -H 'Content-Type: multipart/form-data' \
+     -F 'file=@sample.png'
 ```
 
-#### **Example Response**
+---
+
+## 🚀 Deploying to DigitalOcean
+### **1️⃣ SCP the Project to the Droplet**
+Run the following command to copy your project to your DigitalOcean Droplet:
 ```bash
-{"prediction": 7}
+scp -r mnist-classifier root@YOUR_DROPLET_IP:~/
 ```
 
-## Testing the API
-After running the server, test it using `test.py`:
-
+### **2️⃣ SSH Into the Droplet**
 ```bash
-python3 test.py
+ssh root@YOUR_DROPLET_IP
 ```
+
+### **3️⃣ Install Docker on the Droplet**
+```bash
+sudo apt update
+sudo apt install docker.io -y
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+### **4️⃣ Build and Run the API on the Droplet**
+```bash
+cd ~/mnist-classifier
+
+docker build -t mnist-api -f api/Dockerfile .
+docker run -d -p 8000:8000 mnist-api
+```
+
+### **5️⃣ Open Firewall for FastAPI**
+```bash
+sudo ufw allow 8000
+```
+
+### **6️⃣ Test the Live API**
+```bash
+curl -X 'POST' 'http://YOUR_DROPLET_IP:8000/predict/' \
+     -H 'Content-Type: multipart/form-data' \
+     -F 'file=@sample.png'
+```
+
+✅ If this returns a prediction, your API is now live! 🎉
+
+---
+
+## 🔗 Updating the Frontend
+Modify **DigitCanvas.tsx** in the frontend to point to the live API:
+```tsx
+const API_URL = "http://YOUR_DROPLET_IP:8000";
+```
+
+---
+
+## 🔧 Updating the API
+1. **Make changes to the API locally.**
+2. **Rebuild and redeploy:**
+   ```bash
+   git add .
+   git commit -m "Update API"
+   git push origin main
+   scp -r mnist-classifier root@YOUR_DROPLET_IP:~/
+   ssh root@YOUR_DROPLET_IP
+   cd ~/mnist-classifier
+   docker build -t mnist-api -f api/Dockerfile .
+   docker run -d -p 8000:8000 mnist-api
+   ```
+3. **Test the updated API.**
+
+---
+
+Your API is now deployed and can receive requests! 🚀
+
