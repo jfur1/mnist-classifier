@@ -3,26 +3,42 @@ from PIL import Image
 import torch
 import torchvision.transforms as transforms
 import io
+import sys
+import os
+
+# Ensure Python can find 'model' directory
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+# Import CNN from model/
+from model.model import CNN
 
 # Initialize FastAPI app
 app = FastAPI()
 
 # Load trained model
-import os 
-print(os.getcwd())
 model_path = "../model/mnist_cnn_full.pth"
-
-# Load trained model (ensure weights_only=False)
 model = torch.load(model_path, map_location=torch.device("cpu"), weights_only=False)
-model.eval()  # Set to evaluation mode
+model.eval()
 
-# Define image preprocessing (convert to tensor)
+# Define image preprocessing
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),  # Ensure grayscale
     transforms.Resize((28, 28)),  # Resize to MNIST dimensions
     transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))  # MNIST normalization
+    transforms.Normalize((0.1307,), (0.3081,))  # Normalize like MNIST dataset
 ])
+
+# Define a root endpoint
+@app.get("/")
+async def root():
+    return {"message": "Hello, World!"}
+
+
+# Define a ping endpoint
+@app.get("/ping/")
+async def ping():
+    return {"message": "pong"}
+
 
 @app.post("/predict/")
 async def predict_digit(file: UploadFile = File(...)):
@@ -44,7 +60,6 @@ async def predict_digit(file: UploadFile = File(...)):
 
     except Exception as e:
         return {"error": str(e)}
-    
 
 if __name__ == "__main__":
     import uvicorn
