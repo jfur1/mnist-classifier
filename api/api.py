@@ -7,11 +7,21 @@ import sys
 import os
 from fastapi.middleware.cors import CORSMiddleware
 
+
+# Get absolute path to the project root
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Add 'model/' to Python's module path
+sys.path.append(os.path.join(project_root, "model"))
+
+# Import CNN after ensuring sys.path is set
+from model import CNN
+
 # Initialize FastAPI app
 app = FastAPI()
 
-# Define model path
-model_path = "../model/mnist_cnn_full.pth"
+# Ensure absolute model path for production
+model_path = os.path.join(project_root, "model", "mnist_cnn_full.pth")
 
 # CORS
 app.add_middleware(
@@ -21,16 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Get the absolute path of the project root directory
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-# Add 'model/' to Python's module path (same as in the notebook)
-sys.path.append(os.path.join(project_root, "model"))
-
-# Import CNN from model/model.py
-from model import CNN
-
-# Load trained model
+# Load the full model
 model = torch.load(model_path, map_location=torch.device("cpu"), weights_only=False)
 
 # Move model to CPU and set to eval mode
@@ -44,6 +45,15 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))  # Normalize like MNIST dataset
 ])
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the MNIST API!"}
+
+
+@app.get("/ping")
+async def ping():
+    return {"ping": "pong"}
 
 
 @app.post("/predict/")
