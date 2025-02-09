@@ -53,7 +53,7 @@ To avoid unnecessary re-downloading, the script checks if these files already ex
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/mnist-classifier.git
+git clone https://github.com/jfur1/mnist-classifier.git
 cd mnist-classifier
 ```
 

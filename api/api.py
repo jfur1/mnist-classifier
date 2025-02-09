@@ -1,23 +1,40 @@
 from fastapi import FastAPI, File, UploadFile
-from PIL import Image
+from PIL import Image, ImageOps  # Import ImageOps for inversion
 import torch
 import torchvision.transforms as transforms
 import io
 import sys
 import os
-
-# Ensure Python can find 'model' directory
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-# Import CNN from model/
-from model.model import CNN
+from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# Load trained model
+# Define model path
 model_path = "../model/mnist_cnn_full.pth"
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Get the absolute path of the project root directory
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Add 'model/' to Python's module path (same as in the notebook)
+sys.path.append(os.path.join(project_root, "model"))
+
+# Import CNN from model/model.py
+from model import CNN
+
+# Load trained model
 model = torch.load(model_path, map_location=torch.device("cpu"), weights_only=False)
+
+# Move model to CPU and set to eval mode
+model.to(torch.device("cpu"))
 model.eval()
 
 # Define image preprocessing
@@ -28,17 +45,6 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))  # Normalize like MNIST dataset
 ])
 
-# Define a root endpoint
-@app.get("/")
-async def root():
-    return {"message": "Hello, World!"}
-
-
-# Define a ping endpoint
-@app.get("/ping/")
-async def ping():
-    return {"message": "pong"}
-
 
 @app.post("/predict/")
 async def predict_digit(file: UploadFile = File(...)):
@@ -47,7 +53,22 @@ async def predict_digit(file: UploadFile = File(...)):
         image_bytes = await file.read()
         image = Image.open(io.BytesIO(image_bytes))
 
-        # Preprocess image
+        # Fix transparency: Convert transparent pixels to white
+        if image.mode in ("RGBA", "P"):  # If image has transparency
+            new_image = Image.new("RGBA", image.size, (255, 255, 255, 255))  # White background
+            new_image.paste(image, (0, 0), image if image.mode == "RGBA" else None)
+            image = new_image.convert("RGB")  # Convert to RGB
+
+        # Convert image to grayscale
+        image = image.convert("L")  # Convert to grayscale
+
+        # Invert colors (black ↔ white)
+        image = ImageOps.invert(image)
+
+        # Save debug image after inversion
+        image.save("../data/debug-inverted.png")
+
+        # Preprocess image for model
         image = transform(image).unsqueeze(0)  # Add batch dimension
 
         # Run inference
@@ -60,7 +81,7 @@ async def predict_digit(file: UploadFile = File(...)):
 
     except Exception as e:
         return {"error": str(e)}
-
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
