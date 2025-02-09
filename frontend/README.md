@@ -41,8 +41,9 @@ npm run build  # Generates optimized production build
    });
    ```
 2. **Build and deploy:**
+When deploying to GitHub Pages, ensure Vite uses .env.production by building with:
    ```bash
-   npm run build
+   npm run build-prod
    npm run deploy
    ```
 
