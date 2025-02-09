@@ -9,6 +9,7 @@ console.log("Using API URL:", API_URL);  // 🔥 Debugging
 
 function App() {
   const [prediction, setPrediction] = useState<number | null>(null);
+  const clearPrediction = () => setPrediction(null);
 
   // Handle image processing and API request
   const classifyDigit = async (image: Blob) => {
@@ -27,7 +28,7 @@ function App() {
   return (
       <div style={{ textAlign: "center" }}>
           <h1>MNIST Digit Classifier</h1>
-          <DigitCanvas onImageReady={classifyDigit} />
+          <DigitCanvas onImageReady={classifyDigit} clearPrediction={clearPrediction}/>
           {prediction !== null && <h2>Prediction: {prediction}</h2>}
       </div>
   );
